@@ -1,0 +1,15 @@
+<resources>
+<!--
+    <string name="app_name">AutoGradleDemo</string>
+-->
+    <!--测试url-->
+    <string name="dev_url">www.test.url</string>
+    <!--生产url-->
+    <string name="pp_url">www.pp.url</string>
+
+    <string name="name_default">nameDefault</string>
+
+    <string name="name_one">nameOne</string>
+    <string name="name_two">nameTwo</string>
+
+</resources>

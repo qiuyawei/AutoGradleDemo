@@ -1,0 +1,108 @@
+apply plugin: 'com.android.application'
+
+android {
+
+    Properties properties = new Properties()
+    //加载签名配置文件
+    properties.load(new FileInputStream(file(rootProject.file("local.properties"))))
+
+    signingConfigs {
+        release {
+            keyAlias properties["keyAlisa"]
+            keyPassword properties["keyPassword"]
+            storeFile file("../keys/release.jks")//..代表项目根目录，我写法是根目录下keys文件夹下的release.jks
+            storePassword properties["keyStorePassword"]
+        }
+    }
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.gradle.auto.autogradledemo"
+        minSdkVersion rootProject.ext.MIN_SDK_VERSION
+        targetSdkVersion rootProject.ext.TARGET_SDK_VERSION
+        versionCode rootProject.ext.APP_VERSION_CODE
+        versionName rootProject.ext.APP_VERSION_NAME
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        flavorDimensions "default"
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.release
+
+            // 批量打包(gradle 3.0.0 以下)
+            applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "${variant.productFlavors[0].name}_v${defaultConfig.versionName}_${releaseTime()}.apk"
+                }
+            }
+
+            // 批量打包(gradle 3.0.0 以上)
+            // android.applicationVariants.all { variant ->
+            // variant.outputs.all {
+            //     outputFileName = // "${variant.productFlavors[0].name}_v${defaultConfig.versionName}_${releaseTime()}.apk"
+            // }
+        }
+
+    }
+
+
+    productFlavors {
+        defalut {
+            applicationId "com.gradle.auto.autogradledemo"//指定应用的id，也是市场识别的唯一id
+            resValue "string", "app_name", "defalut_myapp"//不同环境，添加 string.xml 资源文件；
+            resValue "bool", "isrRank", 'false'
+
+            //不同环境，动态修改指定的常量；当我们定义如下字段之后，编译后自动生成文件，
+            // 在 app/build/source/BuildConfig/dev/com.lyl.dev/BuildConfig 目录
+            buildConfigField "String", "ENVIRONMENT",'"defalut"'
+
+            manifestPlaceholders = [ENVIRONMENT: "defalut",
+                                    app_icon   : "@drawable/c",
+                                    app_name   : "@string/name_default"
+
+            ]
+        }
+
+        dev {
+            applicationId "com.auto.dev.test"
+            resValue "string", "app_name", "dev_myapp"
+            resValue "bool", "isrRank", 'false'
+            buildConfigField "String", "ENVIRONMENT", '"http://www.test"'//配置测试环境服务器跟地址
+            manifestPlaceholders = [ENVIRONMENT: "dev",
+                                    app_icon   : "@drawable/a",
+                                    app_name   : "@string/name_one"
+
+            ]
+        }
+
+        stage {
+            applicationId "com.auto.stage.test"
+            resValue "string", "app_name", "stage_myapp"
+            resValue "bool", "isrRank", 'false'
+
+            buildConfigField "String", "ENVIRONMENT", '"http://www.pp.test"'//配置生产环境地址
+            manifestPlaceholders = [ENVIRONMENT: "stage",
+                                    app_icon   : "@drawable/big",
+                                    app_name   : "@string/name_two"
+            ]
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+//定义一个有返回值得方法
+def releaseTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
